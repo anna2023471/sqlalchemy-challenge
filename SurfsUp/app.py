@@ -20,10 +20,13 @@ Measurement = Base.classes.measurement
 year_ago = dt.date(2017, 8, 23) - dt.timedelta(days=365)
 
 # Create selection variable to use in temp calculations
-sel = [
+sel_temp = [
       func.min(Measurement.tobs),
       func.avg(Measurement.tobs),
       func.max(Measurement.tobs)]
+
+# Create selection variable to use in station query
+sel_station = [Station.station, Station.name, Station.latitude, Station.longitude, Station.elevation]
 
 # Create app
 app = Flask(__name__)
@@ -64,13 +67,13 @@ def station():
 
     # Retrieve station data
     session = Session(engine)
-    station_query_data = session.query(Station.station, Station.name, Station.latitude, Station.longitude, Station.elevation).all()
+    station_query = session.query(*sel_station).filter(Measurement.station == Station.station).distinct().all()
     session.close()
 
     # Create dictionary with station ID as key and station details as values, and append all values to list of station records
     station_data = []
-    for station, name, latitude, longitude, elevation in station_query_data:
-        station_dict = {station: [name, latitude, longitude,  elevation]}
+    for station, name, latitude, longitude, elevation in station_query:
+        station_dict = {station: [name, latitude, longitude, elevation]}
         station_data.append(station_dict)
 
     # Jsonify output
@@ -104,7 +107,7 @@ def start_date(start):
     
     # Perform selected calculations on all data from the specified start date to end of dataset
     session = Session(engine)  
-    start_date_data = session.query(*sel).filter(Measurement.date >= start).all()
+    start_date_data = session.query(*sel_temp).filter(Measurement.date >= start).all()
     session.close()
     
     # Convert query results to a list
@@ -119,7 +122,7 @@ def date_range(start, end):
 
     # Perform selected calculations on all data from the specified start date to the specified end date
     session = Session(engine)    
-    date_range_data = session.query(*sel).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    date_range_data = session.query(*sel_temp).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
     session.close()
 
     # Convert query results to a list
