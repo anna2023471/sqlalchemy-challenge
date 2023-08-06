@@ -1,18 +1,19 @@
 from flask import Flask, jsonify
 
+import datetime as dt
+import numpy as np
+
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 
-import datetime as dt
-import numpy as np
-
+# Create engine, reflect the database and tables
 engine = create_engine("sqlite:///../Resources/hawaii.sqlite")
 Base = automap_base()
 Base.prepare(autoload_with=engine)
 
-# Save classes
+# Save references to classes
 Station = Base.classes.station
 Measurement = Base.classes.measurement
 
